@@ -1,8 +1,10 @@
+from typing import Any
+
 import requests
 from fastapi import HTTPException
 
 
-def transcribe_audio_file(whisper_model, file_path):
+def transcribe_audio_file(whisper_model, file_path: str) -> str:
     try:
         segments = whisper_model.transcribe(file_path)
 
@@ -15,7 +17,7 @@ def transcribe_audio_file(whisper_model, file_path):
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 
-def ollama_llm(prev_diagnosis, user_prompt):
+def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
     url = "http://localhost:11434/api/chat"
     data = {
         "model": "phi4:latest",
@@ -49,7 +51,7 @@ def ollama_llm(prev_diagnosis, user_prompt):
         return None
 
 
-def llm_impressions_cleanup(user_prompt):
+def llm_impressions_cleanup(user_prompt: str) -> str | None:
     url = "http://localhost:11434/api/chat"
     data = {
         "model": "phi4:latest",

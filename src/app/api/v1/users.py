@@ -1,8 +1,11 @@
+import json
+
 from fastapi import APIRouter, Depends
 
 from fastapi import APIRouter, Depends
 
 from ...api.dependencies import get_current_user
+from ...core.config import settings
 
 router = APIRouter(tags=["users"])
 
@@ -25,3 +28,14 @@ async def protected_route(session=Depends(get_current_user)):
     # protected route things here
 
     pass
+
+
+@router.get("/get-template")
+def get_template(modality: str, organ: str, session=Depends(get_current_user)):
+    # TODO: check if there is any template entry in the user_id, modality, organ table
+    # TODO: if yes pull that and send.
+    # TODO ELSE:
+    with open(settings.COMMON_TEMPLATE_PATH, "r") as f:
+        json_data = json.load(f)
+
+    return {"findings_template": json_data[modality.lower()][organ.lower()]}
