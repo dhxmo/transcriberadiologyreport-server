@@ -1,12 +1,10 @@
-from typing import Any
-
-import requests
+import httpx
 from fastapi import HTTPException
 
 
-def transcribe_audio_file(whisper_model, file_path: str) -> str:
+async def transcribe_audio_file(whisper_model, file_path: str) -> str:
     try:
-        segments = whisper_model.transcribe(file_path)
+        segments = await whisper_model.transcribe(file_path)
 
         all_text = ""
         for segment in segments:
@@ -17,7 +15,7 @@ def transcribe_audio_file(whisper_model, file_path: str) -> str:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 
-def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
+async def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
     url = "http://localhost:11434/api/chat"
     data = {
         "model": "phi4:latest",
@@ -43,15 +41,19 @@ def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
     }
 
     try:
-        response = requests.post(url, json=data)
-        response.raise_for_status()
-        return response.json()["message"]["content"]
-    except requests.exceptions.RequestException as e:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=data)
+            response.raise_for_status()
+            return response.json()["message"]["content"]
+    except httpx.RequestError as e:
         print(f"Request failed: {e}")
+        return None
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error: {e.response.status_code} - {e}")
         return None
 
 
-def llm_impressions_cleanup(user_prompt: str) -> str | None:
+async def llm_impressions_cleanup(user_prompt: str) -> str | None:
     url = "http://localhost:11434/api/chat"
     data = {
         "model": "phi4:latest",
@@ -73,9 +75,13 @@ def llm_impressions_cleanup(user_prompt: str) -> str | None:
     }
 
     try:
-        response = requests.post(url, json=data)
-        response.raise_for_status()
-        return response.json()["message"]["content"]
-    except requests.exceptions.RequestException as e:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=data)
+            response.raise_for_status()
+            return response.json()["message"]["content"]
+    except httpx.RequestError as e:
         print(f"Request failed: {e}")
+        return None
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error: {e.response.status_code} - {e}")
         return None

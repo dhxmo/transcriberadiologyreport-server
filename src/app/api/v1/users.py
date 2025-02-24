@@ -2,12 +2,10 @@ import json
 
 from fastapi import APIRouter, Depends
 
-from fastapi import APIRouter, Depends
-
 from ...api.dependencies import get_current_user
 from ...core.config import settings
 
-router = APIRouter(tags=["users"])
+router = APIRouter(prefix="/users", tags=["users"])
 
 # TODO: route to check /me. if new user register in db, else return
 # if paid, check payment expiry. if 1 day away from expiry return "will expire in one day"

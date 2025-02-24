@@ -34,11 +34,11 @@ async def shutdown(ctx: Worker) -> None:
 
 async def transcribe_findings(ctx: Worker, req_body, audio_file) -> str:
     # transcribe audio file
-    audio_text = transcribe_audio_file(settings.MODELS["whisper"], audio_file)
+    audio_text = await transcribe_audio_file(settings.MODELS["whisper"], audio_file)
     print("audio_text", audio_text)
 
     # call llm
-    updated_text = ollama_llm(
+    updated_text = await ollama_llm(
         prev_diagnosis=req_body["curr_text"],
         user_prompt=audio_text,
     )
@@ -48,10 +48,10 @@ async def transcribe_findings(ctx: Worker, req_body, audio_file) -> str:
 
 
 async def transcribe_impressions(ctx: Worker, audio_file: str) -> str:
-    audio_text = transcribe_audio_file(settings.MODELS["whisper"], audio_file)
+    audio_text = await transcribe_audio_file(settings.MODELS["whisper"], audio_file)
     print("audio_text", audio_text)
 
-    updated_text = llm_impressions_cleanup(audio_text)
+    updated_text = await llm_impressions_cleanup(audio_text)
     print("updated_text", updated_text)
 
     return updated_text
