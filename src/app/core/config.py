@@ -1,8 +1,12 @@
 import os
+from collections import defaultdict
+from dataclasses import field
 from enum import Enum
+from typing import Optional
 
 from pydantic_settings import BaseSettings
 from starlette.config import Config
+from typing_extensions import LiteralString
 
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.join(current_file_dir, "..", "..", ".env")
@@ -27,14 +31,6 @@ class CryptSettings(BaseSettings):
 
 class DatabaseSettings(BaseSettings):
     pass
-
-
-# class SQLiteSettings(DatabaseSettings):
-#     SQLITE_URI: str = config("SQLITE_URI", default="./sql_app.db")
-#     SQLITE_SYNC_PREFIX: str = config("SQLITE_SYNC_PREFIX", default="sqlite:///")
-#     SQLITE_ASYNC_PREFIX: str = config(
-#         "SQLITE_ASYNC_PREFIX", default="sqlite+aiosqlite:///"
-#     )
 
 
 class PostgresSettings(DatabaseSettings):
@@ -113,11 +109,17 @@ class ClerkAuthSettings(BaseSettings):
 class EnvironmentSettings(BaseSettings):
     ENVIRONMENT: EnvironmentOption = config("ENVIRONMENT", default="local")
     DB_ENGINE: DBOption = config("DB_ENGINE", default="sqlite")
+    COMMON_TEMPLATE_PATH: str = os.path.join(
+        current_file_dir, "..", "..", "..", "assets", "findings_template.json"
+    )
+    MEDIA_DIR_PATH: str = os.path.join(current_file_dir, "..", "..", "..", "media")
+    MEDIA_AWS_DIR_PATH: str = os.path.join(
+        current_file_dir, "..", "..", "..", "media_aws"
+    )
+    MODELS: dict = field(default_factory=dict)
 
 
 db_type = PostgresSettings
-# if config("DB_ENGINE", default="sqlite") == "sqlite":
-#     db_type = SQLiteSettings
 
 
 class Settings(

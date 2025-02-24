@@ -1,15 +1,18 @@
 from collections.abc import AsyncGenerator, Callable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 import anyio
 import fastapi
+import numpy as np
 import redis.asyncio as redis
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import APIRouter, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from pywhispercpp.model import Model
 from sqlmodel import SQLModel
 
 from .config import (
@@ -41,7 +44,8 @@ async def create_redis_cache_pool() -> None:
 
 
 async def close_redis_cache_pool() -> None:
-    await cache.client.aclose()  # type: ignore
+    if cache.client:
+        await cache.client.aclose()  # type: ignore
 
 
 # -------------- queue --------------
@@ -52,7 +56,8 @@ async def create_redis_queue_pool() -> None:
 
 
 async def close_redis_queue_pool() -> None:
-    await queue.pool.aclose()  # type: ignore
+    if queue.pool:
+        await queue.pool.aclose()  # type: ignore
 
 
 # -------------- application --------------
@@ -89,7 +94,33 @@ def lifespan_factory(
             if isinstance(settings, RedisQueueSettings):
                 await create_redis_queue_pool()
 
+        # create media folder if it doesnt exist
+        Path(settings.MEDIA_DIR_PATH).mkdir(exist_ok=True)
+        Path(settings.MEDIA_AWS_DIR_PATH).mkdir(exist_ok=True)
+
+        # Load the models
+        settings.MODELS["whisper"] = Model("base.en")
+
+        # --- Warm up the models
+
+        # whisper warm up
+        sample_rate = 16000  # Standard sample rate for Whisper
+        duration = 3.0  # Duration in seconds
+        t = np.linspace(0, duration, int(sample_rate * duration), False)
+        # Create a sine wave at 440 Hz (A4 note)
+        dummy_audio = np.sin(2 * np.pi * 440 * t)
+        # Add some noise to make it more realistic
+        dummy_audio += 0.5 * np.random.randn(len(dummy_audio))
+        # Normalize to [-1, 1] range
+        dummy_audio = dummy_audio / np.abs(dummy_audio).max()
+        # Reshape to match expected format (batch_size, audio_length)
+        dummy_audio = dummy_audio.reshape(1, -1)
+        settings.MODELS["whisper"].transcribe(dummy_audio)
+
         yield
+
+        # Clean up resources
+        settings.MODELS.clear()
 
         if isinstance(settings, RedisCacheSettings):
             await close_redis_cache_pool()
