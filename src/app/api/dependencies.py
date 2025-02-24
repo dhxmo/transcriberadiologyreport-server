@@ -59,6 +59,9 @@ def get_email_from_session(session_id):
         return None
 
 
+# TODO: if new user create entry in db
+
+
 # Dependency function to get the current authenticated user
 async def get_current_user(request: Request, session_id: str = Query(...)):
     # Get the session token from the Authorization header

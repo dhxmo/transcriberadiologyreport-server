@@ -7,7 +7,7 @@ from sqlmodel import SQLModel, Field
 
 class UserBase(SQLModel):
     user_id: str = Field(
-        ..., min_length=2, max_length=30, schema_extra={"example": "User Userson"}
+        ..., min_length=2, max_length=30, schema_extra={"example": "User_userson123"}
     )
     email: str = Field(..., schema_extra={"example": "user.userson@example.com"})
 
@@ -16,6 +16,7 @@ class User(UserBase, table=True):
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, primary_key=True)
     tier: Optional[str] = Field(..., schema_extra={"example": "free"})
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
 
 class UserCreate(UserBase):
@@ -24,7 +25,7 @@ class UserCreate(UserBase):
 
 
 class UserCreateInternal(UserBase):
-    updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class UserRead(SQLModel):

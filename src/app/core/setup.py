@@ -89,9 +89,6 @@ def lifespan_factory(
             if isinstance(settings, RedisQueueSettings):
                 await create_redis_queue_pool()
 
-            if isinstance(settings, RedisRateLimiterSettings):
-                await create_redis_rate_limit_pool()
-
         yield
 
         if isinstance(settings, RedisCacheSettings):
@@ -99,9 +96,6 @@ def lifespan_factory(
 
         if isinstance(settings, RedisQueueSettings):
             await close_redis_queue_pool()
-
-        if isinstance(settings, RedisRateLimiterSettings):
-            await close_redis_rate_limit_pool()
 
     return lifespan
 
