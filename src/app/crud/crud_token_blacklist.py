@@ -3,7 +3,9 @@ from fastcrud import FastCRUD
 from ..models.token_blacklist import (
     TokenBlacklist,
     TokenBlacklistCreate,
-    TokenBlacklistUpdate, TokenBlacklistCreateInternal, TokenBlacklistUpdateInternal,
+    TokenBlacklistUpdate,
+    TokenBlacklistCreateInternal,
+    TokenBlacklistUpdateInternal,
 )
 
 CRUDTokenBlacklist = FastCRUD[

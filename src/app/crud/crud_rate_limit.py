@@ -5,7 +5,8 @@ from ..models.rate_limit import (
     RateLimitCreateInternal,
     RateLimitDelete,
     RateLimitUpdate,
-    RateLimitUpdateInternal, RateLimitCreate,
+    RateLimitUpdateInternal,
+    RateLimitCreate,
 )
 
 CRUDRateLimit = FastCRUD[

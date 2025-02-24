@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 # import pdb; pdb.set_trace()
 
+
 async def create_first_user(session: AsyncSession) -> None:
     try:
         name = settings.ADMIN_NAME

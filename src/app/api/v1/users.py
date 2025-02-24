@@ -52,7 +52,11 @@ async def write_user(
     return created_user
 
 
-@router.get("/users", response_model=PaginatedListResponse[UserRead])
+@router.get(
+    "/users",
+    response_model=PaginatedListResponse[UserRead],
+    dependencies=[Depends(get_current_superuser)],
+)
 async def read_users(
     request: Request,
     db: Annotated[AsyncSession, Depends(async_get_db)],

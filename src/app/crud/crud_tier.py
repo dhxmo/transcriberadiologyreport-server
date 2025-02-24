@@ -5,7 +5,8 @@ from ..models.tier import (
     TierCreateInternal,
     TierDelete,
     TierUpdate,
-    TierUpdateInternal, TierCreate,
+    TierUpdateInternal,
+    TierCreate,
 )
 
 CRUDTier = FastCRUD[

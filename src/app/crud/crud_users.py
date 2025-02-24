@@ -5,7 +5,8 @@ from ..models.user import (
     UserCreateInternal,
     UserDelete,
     UserUpdate,
-    UserUpdateInternal, UserTierUpdate,
+    UserUpdateInternal,
+    UserTierUpdate,
 )
 
 CRUDUser = FastCRUD[

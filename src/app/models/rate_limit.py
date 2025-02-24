@@ -21,9 +21,7 @@ class RateLimit(RateLimitBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     tier_id: int = Field(foreign_key="tier.id")
     name: Optional[str] = Field(default=None, schema_extra={"example": "users:5:60"})
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
 

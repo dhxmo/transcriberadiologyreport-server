@@ -18,12 +18,14 @@ class TokenBlacklistBase(BaseModel):
 class TokenBlacklistCreate(TokenBlacklistBase):
     pass
 
+
 class TokenBlacklistCreateInternal(TokenBlacklistBase):
     pass
 
 
 class TokenBlacklistUpdate(TokenBlacklistBase):
     pass
+
 
 class TokenBlacklistUpdateInternal(TokenBlacklistBase):
     pass

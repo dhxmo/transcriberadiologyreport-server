@@ -18,9 +18,7 @@ class User(UserBase, table=True):
     hashed_password: str
     is_superuser: bool = Field(default=False)
     tier_id: Optional[int] = Field(default=None, foreign_key="tier.id")
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
     is_deleted: bool = Field(default=False)

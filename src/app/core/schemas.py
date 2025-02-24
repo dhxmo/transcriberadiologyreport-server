@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_serializer
 
 UTC = timezone.utc
 
+
 class HealthCheck(BaseModel):
     name: str
     version: str
