@@ -3,16 +3,15 @@ from typing import Any
 from arq.jobs import Job as ArqJob
 from fastapi import APIRouter, Depends
 
-from ...api.dependencies import rate_limiter
 from ...core.utils import queue
 from ...models.job import Job
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
+# route to allow inference  --- dependency to allow 3 for free tier
 
-@router.post(
-    "/task", response_model=Job, status_code=201, dependencies=[Depends(rate_limiter)]
-)
+
+@router.post("/task", response_model=Job, status_code=201)
 async def create_task(message: str) -> dict[str, str]:
     """Create a new background task.
 

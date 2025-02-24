@@ -7,13 +7,11 @@ import fastapi
 import redis.asyncio as redis
 from arq import create_pool
 from arq.connections import RedisSettings
-from fastapi import APIRouter, Depends, FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlmodel import SQLModel
 
-from ..api.dependencies import get_current_superuser
-from ..middleware.client_cache_middleware import ClientCacheMiddleware
 from .config import (
     AppSettings,
     ClientSideCacheSettings,
@@ -26,8 +24,8 @@ from .config import (
     settings,
 )
 from .db.database import async_engine as engine
-from .utils import cache, queue, rate_limit
-from ..models import *
+from .utils import cache, queue
+from ..middleware.client_cache_middleware import ClientCacheMiddleware
 
 
 # -------------- database --------------
@@ -55,16 +53,6 @@ async def create_redis_queue_pool() -> None:
 
 async def close_redis_queue_pool() -> None:
     await queue.pool.aclose()  # type: ignore
-
-
-# -------------- rate limit --------------
-async def create_redis_rate_limit_pool() -> None:
-    rate_limit.pool = redis.ConnectionPool.from_url(settings.REDIS_RATE_LIMIT_URL)
-    rate_limit.client = redis.Redis.from_pool(rate_limit.pool)  # type: ignore
-
-
-async def close_redis_rate_limit_pool() -> None:
-    await rate_limit.client.aclose()  # type: ignore
 
 
 # -------------- application --------------
@@ -199,8 +187,8 @@ def create_application(
     if isinstance(settings, EnvironmentSettings):
         if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
             docs_router = APIRouter()
-            if settings.ENVIRONMENT != EnvironmentOption.LOCAL:
-                docs_router = APIRouter(dependencies=[Depends(get_current_superuser)])
+            # if settings.ENVIRONMENT != EnvironmentOption.LOCAL:
+            #     docs_router = APIRouter(dependencies=[Depends(get_current_superuser)])
 
             @docs_router.get("/docs", include_in_schema=False)
             async def get_swagger_documentation() -> fastapi.responses.HTMLResponse:

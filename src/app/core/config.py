@@ -106,6 +106,10 @@ class DBOption(Enum):
     SQLITE = "sqlite"
 
 
+class ClerkAuthSettings(BaseSettings):
+    CLERK_SECRET_KEY: str = config("CLERK_SECRET_KEY", default="test_key")
+
+
 class EnvironmentSettings(BaseSettings):
     ENVIRONMENT: EnvironmentOption = config("ENVIRONMENT", default="local")
     DB_ENGINE: DBOption = config("DB_ENGINE", default="sqlite")
@@ -127,6 +131,7 @@ class Settings(
     RedisQueueSettings,
     RedisRateLimiterSettings,
     DefaultRateLimitSettings,
+    ClerkAuthSettings,
     EnvironmentSettings,
 ):
     pass
