@@ -1,10 +1,15 @@
+import asyncio
+
 import httpx
 from fastapi import HTTPException
+
+llm_endpoint = "http://127.0.0.1:11434/api/chat"
+llm_model = "phi4:latest"
 
 
 async def transcribe_audio_file(whisper_model, file_path: str) -> str:
     try:
-        segments = await whisper_model.transcribe(file_path)
+        segments = await asyncio.to_thread(whisper_model.transcribe, file_path)
 
         all_text = ""
         for segment in segments:
@@ -16,9 +21,8 @@ async def transcribe_audio_file(whisper_model, file_path: str) -> str:
 
 
 async def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
-    url = "http://localhost:11434/api/chat"
     data = {
-        "model": "phi4:latest",
+        "model": llm_model,
         "messages": [
             {
                 "role": "system",
@@ -42,7 +46,9 @@ async def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=data)
+            response = await client.post(
+                llm_endpoint, headers={"Content-Type": "application/json"}, json=data
+            )
             response.raise_for_status()
             return response.json()["message"]["content"]
     except httpx.RequestError as e:
@@ -54,9 +60,9 @@ async def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
 
 
 async def llm_impressions_cleanup(user_prompt: str) -> str | None:
-    url = "http://localhost:11434/api/chat"
+    # url = llm_endpoint
     data = {
-        "model": "phi4:latest",
+        "model": llm_model,
         "messages": [
             {
                 "role": "system",
@@ -76,7 +82,9 @@ async def llm_impressions_cleanup(user_prompt: str) -> str | None:
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=data)
+            response = await client.post(
+                llm_endpoint, headers={"Content-Type": "application/json"}, json=data
+            )
             response.raise_for_status()
             return response.json()["message"]["content"]
     except httpx.RequestError as e:

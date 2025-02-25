@@ -1,14 +1,20 @@
-import aiofiles
-from starlette.websockets import WebSocketDisconnect
-from fastapi import APIRouter, Request, WebSocket, HTTPException
+from types import NoneType
 
+import aiofiles
+from fastapi import APIRouter, WebSocket, Depends
+from starlette.websockets import WebSocketDisconnect
+
+from ..dependencies import ws_get_current_user
 from ...core.ws_connection_manager import ConnectionManager
 
 router = APIRouter(tags=["ws"])
 
 
-@router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
+@router.websocket("/ws/{client_id}", dependencies=[Depends(ws_get_current_user)])
+async def websocket_endpoint(
+    websocket: WebSocket,
+    client_id: str,
+):
     manager = ConnectionManager()
 
     try:
@@ -26,7 +32,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                     await out_file.seek(0)
                     await out_file.truncate(0)
                 else:
-                    await out_file.write(message.get("bytes"))
+                    if message.get("bytes") is not NoneType:
+                        await out_file.write(message.get("bytes"))
     except WebSocketDisconnect:
         manager.disconnect(client_id)
     except Exception as e:

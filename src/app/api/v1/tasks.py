@@ -2,7 +2,6 @@ from typing import Any
 
 from arq.jobs import Job as ArqJob
 from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel
 
 from ...core.config import settings
 from ...core.utils import queue
@@ -31,10 +30,6 @@ async def get_task(task_id: str) -> dict[str, Any] | None:
 
 # {"updated_text": updated_text} for find
 #  {"audio_text": audio_text} for impre
-
-
-class JobResponse(BaseModel):
-    id: str
 
 
 @router.post("/transcribe-findings")

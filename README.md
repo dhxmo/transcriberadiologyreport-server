@@ -5,6 +5,19 @@
 alembic revision --autogenerate -m " ... msg ..." && alembic upgrade head
 ```
 
+# run:
+
+dev:
+```sh
+uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+production:
+```sh
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --ssl-keyfile ./key.pem --ssl-certfile ./cert.pem
+--or--
+uvicorn main:app --host 0.0.0.0 --port 8000 --ssl-keyfile ./key.pem --ssl-certfile ./cert.pem
+```
 
 
 ### Project Structure

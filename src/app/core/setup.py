@@ -87,40 +87,17 @@ def lifespan_factory(
         if isinstance(settings, DatabaseSettings) and create_tables_on_start:
             await create_tables()
 
-        if settings.ENVIRONMENT != EnvironmentOption.LOCAL:
-            if isinstance(settings, RedisCacheSettings):
-                await create_redis_cache_pool()
+        if isinstance(settings, RedisCacheSettings):
+            await create_redis_cache_pool()
 
-            if isinstance(settings, RedisQueueSettings):
-                await create_redis_queue_pool()
+        if isinstance(settings, RedisQueueSettings):
+            await create_redis_queue_pool()
 
         # create media folder if it doesnt exist
         Path(settings.MEDIA_DIR_PATH).mkdir(exist_ok=True)
         Path(settings.MEDIA_AWS_DIR_PATH).mkdir(exist_ok=True)
 
-        # Load the models
-        settings.MODELS["whisper"] = Model("base.en")
-
-        # --- Warm up the models
-
-        # whisper warm up
-        sample_rate = 16000  # Standard sample rate for Whisper
-        duration = 3.0  # Duration in seconds
-        t = np.linspace(0, duration, int(sample_rate * duration), False)
-        # Create a sine wave at 440 Hz (A4 note)
-        dummy_audio = np.sin(2 * np.pi * 440 * t)
-        # Add some noise to make it more realistic
-        dummy_audio += 0.5 * np.random.randn(len(dummy_audio))
-        # Normalize to [-1, 1] range
-        dummy_audio = dummy_audio / np.abs(dummy_audio).max()
-        # Reshape to match expected format (batch_size, audio_length)
-        dummy_audio = dummy_audio.reshape(1, -1)
-        settings.MODELS["whisper"].transcribe(dummy_audio)
-
         yield
-
-        # Clean up resources
-        settings.MODELS.clear()
 
         if isinstance(settings, RedisCacheSettings):
             await close_redis_cache_pool()

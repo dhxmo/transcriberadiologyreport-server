@@ -1,28 +1,21 @@
+import asyncio
+
+import jwt
 from clerk_backend_api import Clerk
 from clerk_backend_api.models import ClerkErrors, SDKError
-from fastapi import HTTPException, Request, Query
+from fastapi import HTTPException, Request, Query, WebSocket, Depends
+from fastapi.security import OAuth2PasswordBearer
+from starlette import status
 
 from ..core.config import settings
 from ..core.logger import logging
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_LIMIT = settings.DEFAULT_RATE_LIMIT_LIMIT
-DEFAULT_PERIOD = settings.DEFAULT_RATE_LIMIT_PERIOD
-
-# Initialize Clerk client with the secret key
-clerk_client = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
-
 
 # Function to retrieve the primary email address from a session ID
-def get_email_from_session(session_id):
+def get_email_from_session(clerk_client, session):
     try:
-        # Retrieve the session details
-        session = clerk_client.sessions.get(session_id=session_id)
-        if not session:
-            print(f"No session found for ID: {session_id}")
-            return None
-
         # Extract the user ID from the session
         user_id = session.user_id
 
@@ -53,7 +46,6 @@ def get_email_from_session(session_id):
         else:
             print(f"Primary email address not found for user ID: {user_id}")
             return None
-
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
@@ -77,14 +69,20 @@ async def get_current_user(request: Request, session_id: str = Query(...)):
         )
 
     try:
-        # Verify the session with Clerk
-        # Note: We're using the synchronous `get` method here. Consider using the async version in production.
-        res = clerk_client.sessions.get(session_id=session_id)
-        email = get_email_from_session(session_id)
+        with Clerk(bearer_auth=settings.CLERK_SECRET_KEY) as clerk_client:
+            # Verify the session with Clerk
+            loop = asyncio.get_event_loop()
+            session = await loop.run_in_executor(
+                None, lambda: clerk_client.sessions.get(session_id=session_id)
+            )
+            email = await loop.run_in_executor(
+                None,
+                lambda: get_email_from_session(
+                    clerk_client=clerk_client, session=session
+                ),
+            )
 
-        # Return the session object
-        return res, email
-
+            return session, email
     except ClerkErrors as e:
         # Handle Clerk-specific errors
         print(f"Clerk error: {str(e)}")
@@ -93,3 +91,38 @@ async def get_current_user(request: Request, session_id: str = Query(...)):
         # Handle general SDK errors
         print(f"SDK error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def ws_get_current_user(websocket: WebSocket, session_id: str = Query(...)):
+    if not session_id:
+        await websocket.close(code=1008)
+        raise HTTPException(status_code=401, detail="Session ID missing")
+
+    try:
+        with Clerk(
+            bearer_auth=settings.CLERK_SECRET_KEY, debug_logger=logger
+        ) as clerk_client:
+            # Verify the session with Clerk
+            loop = asyncio.get_event_loop()
+            session = await loop.run_in_executor(
+                None, lambda: clerk_client.sessions.get(session_id=session_id)
+            )
+            email = await loop.run_in_executor(
+                None,
+                lambda: get_email_from_session(
+                    clerk_client=clerk_client, session=session
+                ),
+            )
+            return email
+    except ClerkErrors as e:
+        # Handle Clerk-specific errors
+        print(f"Clerk error: {str(e)}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise HTTPException(status_code=401, detail="Invalid or expired session token")
+    except SDKError as e:
+        # Handle general SDK errors
+        print(f"SDK error: {str(e)}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Internal server error"
+        )

@@ -1,12 +1,9 @@
 import os
-from collections import defaultdict
 from dataclasses import field
 from enum import Enum
-from typing import Optional
 
 from pydantic_settings import BaseSettings
 from starlette.config import Config
-from typing_extensions import LiteralString
 
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.join(current_file_dir, "..", "..", ".env")
