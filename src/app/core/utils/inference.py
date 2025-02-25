@@ -1,10 +1,12 @@
 import asyncio
 
 import httpx
+import requests
 from fastapi import HTTPException
 
 llm_endpoint = "http://127.0.0.1:11434/api/chat"
-llm_model = "phi4:latest"
+# llm_model = "phi4:latest"
+llm_model = "llama3.2:1b"
 
 
 async def transcribe_audio_file(whisper_model, file_path: str) -> str:
@@ -45,22 +47,16 @@ async def ollama_llm(prev_diagnosis: str, user_prompt: str) -> str | None:
     }
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                llm_endpoint, headers={"Content-Type": "application/json"}, json=data
-            )
-            response.raise_for_status()
-            return response.json()["message"]["content"]
-    except httpx.RequestError as e:
-        print(f"Request failed: {e}")
-        return None
-    except httpx.HTTPStatusError as e:
-        print(f"HTTP error: {e.response.status_code} - {e}")
+        response = requests.post(
+            llm_endpoint, headers={"Content-Type": "application/json"}, json=data
+        )
+        return response.json()["message"]["content"]
+    except Exception as e:
+        print(f"HTTP error: {e}")
         return None
 
 
 async def llm_impressions_cleanup(user_prompt: str) -> str | None:
-    # url = llm_endpoint
     data = {
         "model": llm_model,
         "messages": [
@@ -81,15 +77,10 @@ async def llm_impressions_cleanup(user_prompt: str) -> str | None:
     }
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                llm_endpoint, headers={"Content-Type": "application/json"}, json=data
-            )
-            response.raise_for_status()
-            return response.json()["message"]["content"]
-    except httpx.RequestError as e:
-        print(f"Request failed: {e}")
-        return None
-    except httpx.HTTPStatusError as e:
-        print(f"HTTP error: {e.response.status_code} - {e}")
+        response = requests.post(
+            llm_endpoint, headers={"Content-Type": "application/json"}, json=data
+        )
+        return response.json()["message"]["content"]
+    except Exception as e:
+        print(f"HTTP error: {e}")
         return None

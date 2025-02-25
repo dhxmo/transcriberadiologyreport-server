@@ -57,30 +57,16 @@ async def shutdown(ctx: Worker) -> None:
 
 # --------- chained tasks ----------
 async def transcribe_findings(ctx: Worker, req_body, audio_file) -> str:
-    # transcribe audio file
     audio_text = await transcribe_audio_file(settings.MODELS["whisper"], audio_file)
+    updated_text = await ollama_llm(
+        prev_diagnosis=req_body["curr_text"],
+        user_prompt=audio_text,
+    )
+    print("updated_text", updated_text)
 
-    if settings.ENVIRONMENT != "local":
-        # call llm
-        updated_text = await ollama_llm(
-            prev_diagnosis=req_body["curr_text"],
-            user_prompt=audio_text,
-        )
-        print("updated_text", updated_text)
-
-        return updated_text
-
-    return audio_text
+    return updated_text
 
 
 async def transcribe_impressions(ctx: Worker, audio_file: str) -> str:
     audio_text = await transcribe_audio_file(settings.MODELS["whisper"], audio_file)
-    print("audio_text", audio_text)
-
-    if settings.ENVIRONMENT != "local":
-        updated_text = await llm_impressions_cleanup(audio_text)
-        print("updated_text", updated_text)
-
-        return updated_text
-
-    return audio_text
+    return await llm_impressions_cleanup(audio_text)

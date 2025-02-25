@@ -30,7 +30,6 @@ async def protected_route(session=Depends(get_current_user)):
 
 @router.get("/get-template", dependencies=[Depends(get_current_user)])
 async def get_template(modality: str, organ: str):
-    print("mod, or", modality, organ)
     # TODO: check if there is any template entry in the user_id, modality, organ table
     # TODO: if yes pull that and send.
     # TODO ELSE:
